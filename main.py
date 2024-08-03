@@ -84,7 +84,7 @@ def cria_carro():
 # 'request.get_json()' converte o corpo da requisição em um dicionário Python.
 
     try:
-        carro = Carros(marca=body["marca"], modelo= body["modelo"], ano= body["ano"], valor= body["valor"], cor= body["cor"], numero_Vendas= body["numero_Vendas"])
+        carro = Carros(id=body["id"], marca=body["marca"], modelo= body["modelo"], ano= body["ano"], valor= body["valor"], cor= body["cor"], numero_Vendas= body["numero_Vendas"])
 # Tenta criar uma nova instância da classe Carros com os dados fornecidos no corpo da requisição. 
 # Os valores de marca, modelo e ano são extraídos do dicionário body e passados como argumentos para criar o novo objeto carro.
         mybd.session.add(carro)

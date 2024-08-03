@@ -1,5 +1,3 @@
-# streamlit run dash.py
-import time
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -8,14 +6,23 @@ from query import *
 
 st.set_page_config(page_title="Dashboard", page_icon="", layout="wide")
 
-# Fetch data
-result = view_all_data()
-df = pd.DataFrame(result, columns=["id", "Marca", "Modelo", "Ano", "Valor", "Cor", "numero_Vendas"])
+@st.cache_data
+# Função para obter dados da API
+def load_data():
+    
+    result = view_all_data()
+    df = pd.DataFrame(result, columns=["id_carro", "Marca", "Modelo", "Ano", "Valor", "Cor", "numero_Vendas"])
+    return df
+
+df = load_data()
+
+# Botão para atualizar os dados
+if st.button("Atualizar Dados"):
+    df = load_data()    
+
+
 
 # Sidebar
-# st.sidebar.image("img/logo1.png", caption="Análise de Vendas")
-
-# Filters
 st.sidebar.header("Selecione o Filtro")
 marca = st.sidebar.multiselect(
     "Marca Selecionada",
@@ -85,6 +92,10 @@ def Home():
     st.markdown("""-----""")
 
 def graphs():
+    if df_selection.empty:
+        st.write("Nenhum dado disponível para gerar gráficos.")
+        return
+    
     # Gráfico simples de barra
     investimento = df_selection.groupby(by=["Marca"]).count()[["Valor"]].sort_values(by="Valor", ascending=False)
     fig_valores = px.bar(
@@ -138,7 +149,6 @@ def BarraProgresso():
     else:
         st.write("Você tem ", percent, "% ", "of ", format(target, 'd'), " TZS")
         for percent_complete in range(percent):
-            time.sleep(0.1)
             mybar.progress(percent_complete + 1, text="Target Percentage")
 
 def sideBar():
