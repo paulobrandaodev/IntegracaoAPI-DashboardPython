@@ -1,57 +1,49 @@
-import streamlit as st
+import mysql.connector
 import pandas as pd
+import streamlit as st
 import plotly.express as px
 from streamlit_option_menu import option_menu
-from query import *
+from context import get_mysql_data  # Importando do arquivo context.py
 
-st.set_page_config(page_title="Dashboard", page_icon="", layout="wide")
+# Consulta SQL
+query = "SELECT * FROM carros"
 
-@st.cache_data
-# Função para obter dados da API
-def load_data():
-    
-    result = view_all_data()
-    df = pd.DataFrame(result, columns=["id_carro", "Marca", "Modelo", "Ano", "Valor", "Cor", "numero_Vendas"])
-    return df
-
-df = load_data()
+# Carregar os dados do MySQL
+df = get_mysql_data(query)
 
 # Botão para atualizar os dados
 if st.button("Atualizar Dados"):
-    df = load_data()    
+    df = get_mysql_data(query)
 
-
-
-# Sidebar
 st.sidebar.header("Selecione o Filtro")
 marca = st.sidebar.multiselect(
     "Marca Selecionada",
-    options=df["Marca"].unique(),
-    default=df["Marca"].unique(),
+    options=df["marca"].unique(),
+    default=df["marca"].unique(),
     key="marca"
 )
 modelo = st.sidebar.multiselect(
     "Modelo Selecionada",
-    options=df["Modelo"].unique(),
-    default=df["Modelo"].unique(),
+    options=df["modelo"].unique(),
+    default=df["modelo"].unique(),
     key="modelo"
 )
 ano = st.sidebar.multiselect(
     "Ano Selecionada",
-    options=df["Ano"].unique(),
-    default=df["Ano"].unique(),
+    options=df["ano"].unique(),
+    default=df["ano"].unique(),
     key="ano"
 )
 valor = st.sidebar.multiselect(
     "Valor Selecionada",
-    options=df["Valor"].unique(),
-    default=df["Valor"].unique(),
+    options=df["valor"].unique(),
+    default=df["valor"].unique(),
     key="valor"
 )
 cor = st.sidebar.multiselect(
     "Cor Selecionada",
-    options=df["Cor"].unique(),
-    default=df["Cor"].unique(),
+    options=df["cor"].unique(),
+    default=df["cor"].unique(),
     key="cor"
 )
 numero_Vendas = st.sidebar.multiselect(
@@ -62,15 +54,16 @@ numero_Vendas = st.sidebar.multiselect(
 )
 
 df_selection = df.query(
-    "Marca==@marca & Modelo==@modelo & Ano==@ano & Valor==@valor & Cor==@cor & numero_Vendas==@numero_Vendas"
+    "marca==@marca & modelo==@modelo & ano==@ano & valor==@valor & cor==@cor & numero_Vendas==@numero_Vendas"
 )
+
 
 def Home():
     with st.expander("Tabular"):
         showData = st.multiselect('Filter: ', df_selection.columns, default=[], key="showData_home")
         if showData:
             st.write(df_selection[showData])
-        
+
     # Compute top analytics
     venda_total = df_selection["numero_Vendas"].sum()
     valor_venda_media = df_selection["numero_Vendas"].mean()
@@ -84,61 +77,65 @@ def Home():
     with total2:
         st.info(' Valor Médio de Vendas', icon='📌')
         st.metric(label="Média", value=f"{valor_venda_media:,.0f}")
-    
+
     with total3:
         st.info(' Valor Médio dos Carros', icon='📌')
         st.metric(label="Mediana", value=f"{valor_medio_carro:,.0f}")
-        
+
     st.markdown("""-----""")
+
 
 def graphs():
     if df_selection.empty:
         st.write("Nenhum dado disponível para gerar gráficos.")
         return
-    
+
     # Gráfico simples de barra
-    investimento = df_selection.groupby(by=["Marca"]).count()[["Valor"]].sort_values(by="Valor", ascending=False)
+    investimento = df_selection.groupby(by=["marca"]).count()[["valor"]].sort_values(by="valor", ascending=False)
     fig_valores = px.bar(
         investimento,
         x=investimento.index,
-        y="Valor",
+        y="valor",
         orientation="h",
         title="<b>Valores de Carros</b>",
         color_discrete_sequence=["#0083b8"],
         template="plotly_white"
     )
-    
+
     fig_valores.update_layout(
         plot_bgcolor="rgba(0,0,0,0)",
         xaxis=dict(showgrid=False),
         yaxis=dict(showgrid=False)
     )
-    
+
     # Gráfico simples de linha
-    investimento_state = df_selection.groupby(by=["Marca"]).count()[["Valor"]]
+    investimento_state = df_selection.groupby(by=["marca"]).count()[["valor"]]
     fig_state = px.line(
         investimento_state,
         x=investimento_state.index,
-        y="Valor",
+        y="valor",
         title="<b>Valores por Marca</b>",
         color_discrete_sequence=["#0083b8"],
         template="plotly_white"
     )
-    
+
     fig_state.update_layout(
         xaxis=dict(showgrid=False),
         plot_bgcolor="rgba(0,0,0,0)",
         yaxis=dict(showgrid=False)
     )
-    
+
     left, right = st.columns(2)
     with left:
         st.plotly_chart(fig_state, use_container_width=True)
     with right:
         st.plotly_chart(fig_valores, use_container_width=True)
 
+
 def BarraProgresso():
-    st.markdown("""<style>.stProgress > div > div > div > div { background-image: linear-gradient(to right, #99ff99 , #FFFF00)}</style>""", unsafe_allow_html=True)
+    st.markdown(
+        """<style>.stProgress > div > div > div > div { background-image: linear-gradient(to right, #99ff99 , #FFFF00)}</style>""",
+        unsafe_allow_html=True)
     target = 20000000
     current = df_selection["numero_Vendas"].sum()
     percent = round((current / target * 100))
@@ -150,6 +147,7 @@ def BarraProgresso():
         st.write("Você tem ", percent, "% ", "of ", format(target, 'd'), " TZS")
         for percent_complete in range(percent):
             mybar.progress(percent_complete + 1, text="Target Percentage")
+
 
 def sideBar():
     with st.sidebar:
@@ -165,9 +163,10 @@ def sideBar():
         Home()
         graphs()
     if selected == "Progress":
-        st.subheader(f"Page: {selected}")   
-        BarraProgresso() 
+        st.subheader(f"Page: {selected}")
+        BarraProgresso()
         graphs()
+
 
 hide_st_style = """
 <style>

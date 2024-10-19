@@ -1,28 +1,21 @@
-# pip install mysql-connector-python
-# pip install streamlit
-import mysql.connector 
-import streamlit as st
+import mysql.connector
+import pandas as pd
 
-
-# Conexão
-
-conn = mysql.connector.connect(
-    host="127.0.0.1",
-    port="3306",
-    user="root",
-    password="senai@134",
-    db="CarrosBD"
+# Função para conectar ao banco de dados MySQL e realizar consultas
+def get_mysql_data(query):
+    # Conecte ao MySQL
+    conn = mysql.connector.connect(
+        host="localhost",
+        port="3306",
+        user="root",
+        password="toor",
+        db="carrosbd"
     )
 
-if conn.is_connected():
-    print("Conexão bem-sucedida ao banco de dados!")
-else:
-    print("Falha na conexão ao banco de dados.")
+    # Executar a consulta e carregar os dados
+    dataframe = pd.read_sql(query, conn)
 
-c=conn.cursor()
+    # Fechar a conexão
+    conn.close()
 
-# fetch
-def view_all_data():
-    c.execute('select * from Carros order by id asc')
-    data=c.fetchall()
-    return data
+    return dataframe

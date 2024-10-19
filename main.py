@@ -10,7 +10,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 # Configura o SQLAlchemy para rastrear modificações dos objetos, o que não é recomendado para produção.
 # O SQLAlchemy cria e modifica todos os dados da nossa tabela de forma automatica 
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:senai%40134@127.0.0.1/CarrosBD'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:toor@localhost/carrosbd'
 # Configura a URI de conexão com o banco de dados MySQL.
 # Senha -> senai@134, porém aqui a senha passa a ser -> senai%40134
 

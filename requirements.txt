@@ -1,0 +1,11 @@
+streamlit
+flask
+flask_sqlalchemy
+pandas
+plotly
+streamlit_option_menu
+query
+mysql
+mysqlclient
+mysql-connector-python
+
